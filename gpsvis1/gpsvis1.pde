@@ -6,7 +6,9 @@ float  [] tlims;
 
 float t;
 int tinc =1;
-float toffset = 63531993600.0;
+String toffset = "63534130260";
+
+boolean screenGrab = true;
 
 void setup()
 {
@@ -15,8 +17,10 @@ void setup()
     limits = DT.getLims("E", "N", "gps_test");
     tlims = DT.getLims("TO_SECONDS(Timestamp) - " + toffset, "gps_test");
     t = tlims[0];
+    t=0;
     println(t);
     background(255);
+    //frameRate(90);
 }
 
 void draw()
@@ -27,7 +31,7 @@ void draw()
 
     noStroke();
     
-    fill(255,1);
+    fill(255,10);
     rect(0,0,width, height);
     
     fill(0);
@@ -38,8 +42,17 @@ void draw()
         //println(x + " " + y);
         ellipse(x, y, 2, 2);
     }
-    //println(t);
+    
+    if(t%60==0) println(int(t)/3600 + ":" + int(t%3600)/60);
     t+=tinc;
     
-    if(t>tlims[1]) println("zingo");
+    if(t>tlims[1])
+    {
+        println("break");
+        noLoop();
+    }
+    else
+    {
+        if(screenGrab) saveFrame("images/####.jpg");
+    }
 }
