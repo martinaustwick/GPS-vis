@@ -2,8 +2,6 @@ import java.sql.*;
 
 /*
     Drawing GPS-like data from a database
-    V1.0 colour by user
-    configure this to draw data from multiple tables?
 */
 
 gpsTalker DT;
@@ -11,12 +9,12 @@ float [] limits;
 float  [] tlims;
 
 float t;
-int tinc = 30;
+int tinc = 5;
 //seconds after midnight
 int toffset = int(6.5*3600);
 
-int ellipseSize = 10;
-int ellipseAlpha = 10;
+int ellipseSize =8;
+int ellipseAlpha = 15;
 float pointSize = 3;
 
 float opacity = 12;
@@ -66,10 +64,10 @@ void setup()
     smooth();
     frameRate(90);
     
-    bgImage = loadImage("BackgroundMap HD3.jpg");
+    bgImage = loadImage("BackgroundMap Lighter.jpg");
     bgImage.resize(width,height);
     //actually just brighten this up a bit
-    bgImage = contrast(bgImage);
+    //bgImage = contrast(bgImage);
     image(bgImage,0,0);
     bgImage = transparentise(bgImage, opacity, 1);
     
@@ -186,7 +184,11 @@ void drawType()
         
         
 
-       PVector v = new PVector(255*d/dataTables.length,255,120);
+       PVector v = new PVector(255*d/dataTables.length,255,255);
+       
+       //hard code nonsense
+       if(d==0) v.x = 255/6;
+       color(HSB);
 
         for(int i = 0; i<points.size(); i++)
         {
