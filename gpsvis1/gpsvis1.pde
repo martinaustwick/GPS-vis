@@ -15,11 +15,11 @@ int tinc = 30;
 //seconds after midnight
 int toffset = int(6.5*3600);
 
-int ellipseSize = 20;
+int ellipseSize = 10;
 int ellipseAlpha = 10;
 float pointSize = 3;
 
-float opacity = 20;
+float opacity = 12;
 
 boolean screenGrab = true;
 boolean getLimits = false;
@@ -29,23 +29,29 @@ boolean setC = false;
 HashMap<String, PVector> trackCols = new HashMap<String, PVector>();
 
 
-String dataTable1 = "couriers";
 String []  dataTables = {"normals_clean", "couriers"};
-//String dataTable1 = "normals_clean";
 
 //hsb
 PVector bg = new PVector(0,0,0);
 PVector fg = new PVector(0, 0, 255);
 
 
-int w = 1920;
-int h = 1080;
+//int w = 1920;
+//int h = 1080;
+
+int w = 1280;
+int h = 720;
+
+
+PImage bgImage;
+
+int fontSize = 50;
 
 void setup()
 {
     
     DT = new gpsTalker();
-    if(getLimits) limits = DT.getLims("E", "N", dataTable1);
+    if(getLimits) limits = DT.getLims("E", "N", dataTables[0]);
     else setLimits();
     //println(limits);
     //tlims = DT.getLims("TO_SECONDS(Timestamp) - " + toffset, "gps_test");
@@ -60,6 +66,12 @@ void setup()
     smooth();
     frameRate(90);
     
+    bgImage = loadImage("BackgroundMap HD3.jpg");
+    bgImage.resize(width,height);
+    //actually just brighten this up a bit
+    bgImage = contrast(bgImage);
+    image(bgImage,0,0);
+    bgImage = transparentise(bgImage, opacity, 1);
     
 }
 
@@ -90,10 +102,47 @@ void setLimits()
     
 }
 
+PImage transparentise(PImage p, float alpha, float brightenTheCorners)
+{
+    PImage pout = createImage(p.width, p.height, ARGB);
+    pout.loadPixels();
+  
+    p.loadPixels();
+    for(int i = 0; i<p.pixels.length; i++)
+    {
+        pout.pixels[i] = color(hue(p.pixels[i]), 0, brightenTheCorners*brightness(p.pixels[i]), alpha);
+    }
+    pout.updatePixels();
+    return pout;
+}
+
+PImage contrast(PImage p)
+{
+    PImage pout = createImage(p.width, p.height, ARGB);
+    pout.loadPixels();
+  
+    p.loadPixels();
+    float mini = 255;
+    float maxi = 0;
+    for(int i = 0; i<p.pixels.length; i++)
+    {
+        if(mini>brightness(p.pixels[i])) mini = brightness(p.pixels[i]);
+        if(maxi<brightness(p.pixels[i])) maxi = brightness(p.pixels[i]);
+    }
+    for(int i = 0; i<p.pixels.length; i++)
+    {
+        pout.pixels[i] = color(hue(p.pixels[i]), saturation(p.pixels[i]), map(brightness(p.pixels[i]), mini,maxi,0,255),255);
+    }
+    pout.updatePixels();
+    return pout;
+}
+
 void draw()
 {
-    fill(bg.x, bg.y, bg.z, opacity);
-    rect(0,0,width, height);
+//    fill(bg.x, bg.y, bg.z, opacity);
+//    rect(0,0,width, height);
+    image(bgImage,0,0);
+
     drawType();
     
     drawClock();
@@ -110,6 +159,8 @@ void draw()
     }
     
 }
+
+
 
 void drawType()
 {
@@ -182,8 +233,13 @@ void drawClock()
     int m = int(t-(h*3600))/60;
     int s = int(t)%60;
     fill(bg.x, bg.y, bg.z);
-    rect(0, height-20, width, 20);
+    rectMode(CENTER);
+    rect(width/2, height-(0.5*fontSize)-5, 6*fontSize, fontSize+10);
     fill(fg.x, fg.y, fg.z);
-    text(nf(h,2,0) + ":" + nf(m,2,0) + ":" + nf(s,2,0), width/2 - 50, height-10);
+    textSize(fontSize);
+    text(nf(h,2,0) + ":" + nf(m,2,0) + ":" + nf(s,2,0), (width/2) - (2.2*fontSize), height-10);
+//    stroke(255,255,255);
+//    strokeWeight(10);
+//    point(width/2, height-(fontSize*0.5));
     
 }
