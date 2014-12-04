@@ -1,5 +1,11 @@
 import java.sql.*;
 
+/*
+    Drawing GPS-like data from a database
+    V1.0 colour by user
+    configure this to draw data from multiple tables?
+*/
+
 gpsTalker DT;
 float [] limits;
 float  [] tlims;
@@ -7,26 +13,30 @@ float  [] tlims;
 float t;
 int tinc = 30;
 //seconds after midnight
-int toffset = int(4.5*3600);
+int toffset = int(6.5*3600);
 
-int ellipseSize = 5;
+int ellipseSize = 20;
 int ellipseAlpha = 10;
+float pointSize = 3;
+
+float opacity = 20;
 
 boolean screenGrab = true;
 boolean getLimits = false;
-
+ 
 //set color for each track
-boolean setC = true;
+boolean setC = false;
 HashMap<String, PVector> trackCols = new HashMap<String, PVector>();
 
-//String dataTable1 = "couriers";
-String dataTable1 = "normals_clean";
+
+String dataTable1 = "couriers";
+String []  dataTables = {"normals_clean", "couriers"};
+//String dataTable1 = "normals_clean";
 
 //hsb
-PVector bg = new PVector(0,0,255);
-PVector fg = new PVector(0, 0, 0);
+PVector bg = new PVector(0,0,0);
+PVector fg = new PVector(0, 0, 255);
 
-float opacity = 4;
 
 int w = 1920;
 int h = 1080;
@@ -82,62 +92,9 @@ void setLimits()
 
 void draw()
 {
-    //ArrayList<PVector> points = DT.getArrayList("E", "N", "gps_test", " WHERE (TO_SECONDS(Timestamp) - TO_SECONDS(" + startdate + ") <" + t + " AND TO_SECONDS(Timestamp) + " + tinc + ">" + t);
-    //ArrayList<PVector> points = DT.getArrayList("E", "N", dataTable1, " WHERE TIME_TO_SEC(Timestamp) <= " + t + " AND " + (t-tinc) + " < TIME_TO_SEC(Timestamp)");
-    ArrayList<PVector> points = DT.getArrayList("E", "N", dataTable1, " WHERE TIME_TO_SEC(Timestamp) <= " + t + " AND " + (t-tinc) + " < TIME_TO_SEC(Timestamp)");
-
-    //ArrayList<PVector> points = DT.getArrayList("E", "N", dataTable1, " WHERE TIME_TO_SEC(Timestamp) = " + t);
-    ArrayList<String> ids = new ArrayList<String>();
-    if(setC)
-    {
-        //ids = DT.getInfo("Track_ID", dataTable1, " WHERE TIME_TO_SEC(Timestamp) <= " + t + " AND " + (t-tinc) + " < TIME_TO_SEC(Timestamp)");
-        ids = DT.getInfo("name", dataTable1, " WHERE TIME_TO_SEC(Timestamp) <= " + t + " AND " + (t-tinc) + " < TIME_TO_SEC(Timestamp)");
-    }
-    //noStroke();
-    
     fill(bg.x, bg.y, bg.z, opacity);
     rect(0,0,width, height);
-    
-//    stroke(0);
-//    noFill();
-    stroke(0);
-    for(int i = 0; i<points.size(); i++)
-    {
-        PVector p = points.get(i);
-        float x = map(p.x, limits[0], limits[1], 0, width);
-        float y = map(p.y, limits[2], limits[3], height, 0);
-        //println(x + " " + y);
-        //
-        
-        PVector v = new PVector(0,0,0);
-        
-        if(setC)
-        {
-            String currentID = ids.get(i);
-            if(trackCols.get(currentID)==null)
-            {
-                trackCols.put(currentID, new PVector(random(255), 255, 150));
-            }
-            
-            v = trackCols.get(currentID).get();
-        }
-        
-        
-        
-        noFill();
-        stroke(v.x, v.y, v.z);
-        point(x,y);
-        
-        noStroke();
-        fill(v.x, v.y, v.z,ellipseAlpha);
-        ellipse(x, y, ellipseSize, ellipseSize);
-        fill(v.x, v.y, v.z,ellipseAlpha/4);
-        ellipse(x, y, ellipseSize*2, ellipseSize*2);
-        
-    }
-    
-    //if(t%60==0) println(int(t)/3600 + ":" + int(t%3600)/60);
-    
+    drawType();
     
     drawClock();
     
@@ -152,6 +109,71 @@ void draw()
         if(screenGrab) saveFrame("images/####.jpg");
     }
     
+}
+
+void drawType()
+{
+    strokeWeight(pointSize);
+    /*
+        Draw all of the current cyclist types
+        Assumes a comment format
+    */
+    
+    for(int d =0; d<dataTables.length; d++)
+    {
+        ArrayList<PVector> points = DT.getArrayList("E", "N", dataTables[d], " WHERE TIME_TO_SEC(Timestamp) <= " + t + " AND " + (t-tinc) + " < TIME_TO_SEC(Timestamp)");
+    
+        //ArrayList<PVector> points = DT.getArrayList("E", "N", dataTable1, " WHERE TIME_TO_SEC(Timestamp) = " + t);
+        ArrayList<String> ids = new ArrayList<String>();
+        if(setC)
+        {
+            //ids = DT.getInfo("Track_ID", dataTable1, " WHERE TIME_TO_SEC(Timestamp) <= " + t + " AND " + (t-tinc) + " < TIME_TO_SEC(Timestamp)");
+            ids = DT.getInfo("name", dataTables[d], " WHERE TIME_TO_SEC(Timestamp) <= " + t + " AND " + (t-tinc) + " < TIME_TO_SEC(Timestamp)");
+        }
+        //noStroke();
+        
+        
+        
+
+       PVector v = new PVector(255*d/dataTables.length,255,120);
+
+        for(int i = 0; i<points.size(); i++)
+        {
+            PVector p = points.get(i);
+            float x = map(p.x, limits[0], limits[1], 0, width);
+            float y = map(p.y, limits[2], limits[3], height, 0);
+            //println(x + " " + y);
+            //
+            
+            //default color vector will be according to type
+            
+            if(setC)
+            {
+                String currentID = ids.get(i);
+                if(trackCols.get(currentID)==null)
+                {
+                    trackCols.put(currentID, new PVector(random(255), 255, 150));
+                }
+                
+                v = trackCols.get(currentID).get();
+            }
+            
+            
+            
+            
+            noFill();
+            stroke(v.x, v.y, v.z);
+            point(x,y);
+            
+            
+            noStroke();
+            fill(v.x, v.y, v.z,ellipseAlpha);
+            ellipse(x, y, ellipseSize, ellipseSize);
+            fill(v.x, v.y, v.z,ellipseAlpha/4);
+            ellipse(x, y, ellipseSize*2, ellipseSize*2);
+            
+        }
+    }
 }
 
 void drawClock()
